@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": None,
    "id": "e09d1349-65f6-4832-856a-d7d3e497706c",
    "metadata": {},
    "outputs": [],
@@ -119,3 +119,13 @@
  "nbformat": 4,
  "nbformat_minor": 5
 }
+
+
+import boto3, json
+lc = boto3.client('lambda', region_name='eu-north-1')
+resp = lc.invoke(
+    FunctionName='dailyAPIREE',
+    Payload=json.dumps({"target_date":"2025-09-20"}).encode('utf-8')
+)
+print(resp['StatusCode'])
+print(resp['Payload'].read().decode('utf-8'))
