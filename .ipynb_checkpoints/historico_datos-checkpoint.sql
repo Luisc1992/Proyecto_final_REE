@@ -1,1 +1,0 @@
-SELECT * FROM demanda_REE;
