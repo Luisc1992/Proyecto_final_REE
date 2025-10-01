@@ -84,3 +84,5 @@ async def ask_endpoint(payload: Question):
         "sql_generated": sql_generated,
         "results": results
     }
+
+
