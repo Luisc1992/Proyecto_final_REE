@@ -1,13 +1,41 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../modelo")))
+from sqlalchemy import create_engine
 from fastapi import FastAPI
 from pydantic import BaseModel
+from codigo_ML import load_data_from_rds, preprocess_and_features, predict_future,DB_HOST,DB_USER,DB_PASS,DB_PORT,DB_NAME,TABLE_NAME
+import pandas as pd
 import google.generativeai as genai
 import psycopg2
-
+import joblib
 
 genai.configure(api_key="AIzaSyCwPnbsn8xlIfkbakm3hHN3I3rgTXx0TFU")  
-
+def load_recent_data(limit_rows=200):
+    """
+    Carga los últimos `limit_rows` registros por fecha ascendente
+    desde la base de datos.
+    """
+    conn_str = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    engine = create_engine(conn_str, connect_args={"connect_timeout": 10})
+    
+    query = f"""
+        SELECT id, fecha, demanda_mw
+        FROM {TABLE_NAME}
+        ORDER BY fecha DESC
+        LIMIT {limit_rows}
+    """
+    df = pd.read_sql(query, engine)
+    # Ordenar ascendente para que la primera fila sea la más antigua
+    df = df.sort_values("fecha").reset_index(drop=True)
+    return df
 app = FastAPI()
+MODEL_PATH = "../modelo/lgb_demand_model.joblib"
 
+model = joblib.load(MODEL_PATH)
+with open("../modelo/features_cols.txt", "r") as f:
+    features = f.read().splitlines()
 class Question(BaseModel):
     question: str
 
@@ -86,3 +114,10 @@ async def ask_endpoint(payload: Question):
     }
 
 
+@app.post("/forecast")
+async def forecast(days: int):
+    df = load_recent_data(limit_rows=200)
+    df_proc = preprocess_and_features(df)
+    last_block = df_proc.iloc[-180:].copy()
+    preds_future = predict_future(model, last_block, features, horizon=days)
+    return preds_future.to_dict(orient="records")
