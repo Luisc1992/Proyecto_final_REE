@@ -1,10 +1,20 @@
 # Proyecto final
 
-En la carpeta FastAPI tenemos todo el código relativo a la API
+El proyecto de divide en varias partes:
 
-En la carpeta historico_demanda se encuentran los datos históricos de demanda eléctrica
+1. Acceso a la API de Red Eléctrica, con el objeto de obtener los datos de demanda eléctrica en los últimos 15 años (código en la carpeta historico_demanda)
+   
+2. Volcado de la información de la API en un Bucket S3 de AWS, a través de la creación de una primera Lambda (lambda_diaria, en la carpeta lambdas)
+   
+3. Entrenamiento del modelo de predicción (carpeta modelo), a partir de los datos del histórico de los últimos 15 años de demanda
+   
+4. Creación de la base de datos de PostgreSQL
+   
+5. Creación de la segunda lambda (lambda_bbdd en la carpeta lambdas), que envía la información del Bucket S3 a la base de datos de PostgreSQL
+    
+6. Creación de la API (carpeta FastAPI), que utiliza el modelo creado para resolver consultas sobre demanda futura
 
-En la carpeta lambdas está el código de las dos Lambdas, la que envía los datos al Bucket S3 (lambda_diaria) y la que envía la información del Bucket a la Base de datos de PostgreSQL (lambda_bbdd)
+7. Creación del EC2 para funcionamiento de la API de FastAPI
 
-En la carpeta modelo hemos guardado el modelo de predicción de la demanda eléctrica
+
 #
